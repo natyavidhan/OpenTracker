@@ -1,0 +1,28 @@
+{
+    "state": {
+        "running": true,
+        "startAt": 1727802562
+    },
+    "subjects": [
+        {
+            "name": "Maths",
+            "time": 10800,
+            "paused": true
+        },
+        {
+            "name": "Chemistry",
+            "time": 7200,
+            "paused": true
+        },
+        {
+            "name": "Physics",
+            "time": 10000,
+            "paused": false
+        },
+        {
+            "name": "English",
+            "time": 0,
+            "paused": true
+        }
+    ]
+}
