@@ -23,6 +23,11 @@
             "name": "English",
             "time": 0,
             "paused": true
+        },
+        {
+            "name": "General Studies",
+            "time": 0,
+            "paused": true
         }
     ]
 }
