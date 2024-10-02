@@ -1,6 +1,8 @@
 import tkinter as tk
 import json
 from tkinter.constants import *
+from datetime import datetime
+import pytz
 
 from consts import Fonts
 from consts import Colors
@@ -49,7 +51,11 @@ class App:
             self.timer_canvas.create_rectangle(25, 20+(120*idx), 425, 120+(120*idx), fill=Colors.primary, width=0)
             self.timer_canvas.config(scrollregion=(0, 0, 450, 140+(120*idx)))
 
-            self.timer_canvas.create_image((40, 35+(120*idx)), anchor="nw", image=self.start_img)
+            self.timer_canvas.create_image((40, 35+(120*idx)), anchor="nw", image=self.start_img if subs['paused'] else self.pause_img)
+            self.timer_canvas.create_text((110, 35+(120*idx)), anchor="nw", font=Fonts._16, text=subs['name'], fill=Colors.text)
+            print(subs['time'])
+            time = f"{str(subs['time']//3600).zfill(2)}:{str((subs['time']//60)%60).zfill(2)}:{str(subs['time']%60).zfill(2)}"
+            self.timer_canvas.create_text((110, 55+(120*idx)), anchor="nw", font=Fonts._30, text=time, fill=Colors.text)
 
 if __name__ == "__main__":
     root = tk.Tk()
