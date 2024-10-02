@@ -72,6 +72,11 @@ class App:
         
         for s in self.settings['subjects']:
             if s['ids'][0] == item:
+                for s_ in self.settings['subjects']:
+                    if not s_['paused'] and s_['ids'][0] != item:
+                        s_['paused'] = True
+                        self.timer_canvas.itemconfig(s_['ids'][0], image=self.start_img)
+
                 s['paused'] = not s['paused']
                 self.timer_canvas.itemconfig(item, image=self.start_img if s['paused'] else self.pause_img)
 
