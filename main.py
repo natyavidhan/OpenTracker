@@ -2,7 +2,8 @@ import tkinter as tk
 import json
 from tkinter.constants import *
 from datetime import datetime
-import pytz
+import time
+from threading import Thread
 
 from consts import Fonts
 from consts import Colors
@@ -37,6 +38,7 @@ class App:
         self.tabs_frame.place(x=25, y=165)
             
         self.timer_canvas = tk.Canvas(self.tabs_frame, bg=Colors.secondary, borderwidth=0, highlightthickness=0)
+        self.timer_canvas.bind("<Button-1>", self.on_timer_canvas_click)
 
         vbar=tk.Scrollbar(self.timer_canvas, orient=VERTICAL)
         vbar.pack(side=RIGHT,fill=Y)
@@ -45,17 +47,46 @@ class App:
         self.timer_canvas.config(yscrollcommand=vbar.set)
         self.timer_canvas.place(x=0, y=0, width=450, height=500)
 
-        self.subs_frames = []
+        total = 0
 
         for idx, subs in enumerate(self.settings['subjects']):
             self.timer_canvas.create_rectangle(25, 20+(120*idx), 425, 120+(120*idx), fill=Colors.primary, width=0)
             self.timer_canvas.config(scrollregion=(0, 0, 450, 140+(120*idx)))
 
-            self.timer_canvas.create_image((40, 35+(120*idx)), anchor="nw", image=self.start_img if subs['paused'] else self.pause_img)
+            self.timer_canvas.create_image((40, 35+(120*idx)), anchor="nw", image=self.start_img if subs['paused'] else self.pause_img, tags=f"{subs['name']}Btn")
             self.timer_canvas.create_text((110, 35+(120*idx)), anchor="nw", font=Fonts._16, text=subs['name'], fill=Colors.text)
-            print(subs['time'])
-            time = f"{str(subs['time']//3600).zfill(2)}:{str((subs['time']//60)%60).zfill(2)}:{str(subs['time']%60).zfill(2)}"
-            self.timer_canvas.create_text((110, 55+(120*idx)), anchor="nw", font=Fonts._30, text=time, fill=Colors.text)
+            ftime = f"{str(subs['time']//3600).zfill(2)}:{str((subs['time']//60)%60).zfill(2)}:{str(subs['time']%60).zfill(2)}"
+            self.timer_canvas.create_text((110, 55+(120*idx)), anchor="nw", font=Fonts._30, text=ftime, fill=Colors.text, tags=f"{subs['name']}Time")
+            total+=subs['time']
+
+        self.timer_var.set(f"{str(total//3600).zfill(2)}:{str((total//60)%60).zfill(2)}:{str(total%60).zfill(2)}")
+
+        Thread(target=self.update).start()
+
+    def on_timer_canvas_click(self, event):
+        item = self.timer_canvas.find_closest(event.x, event.y)
+        item = self.timer_canvas.itemcget(item, "tags").replace("current", "").strip()
+        print(item)
+
+    def update(self):
+        while True:
+            sub = None
+            for i, s in enumerate(self.settings['subjects']):
+                if not s['paused']:
+                    sub = i
+                    break
+            if sub:
+                self.settings['subjects'][sub]['time']+=1
+
+            total = 0
+
+            for subs in self.settings['subjects']:
+                ftime = f"{str(subs['time']//3600).zfill(2)}:{str((subs['time']//60)%60).zfill(2)}:{str(subs['time']%60).zfill(2)}"
+                self.timer_canvas.itemconfig(f"{subs['name']}Time", text=ftime)
+                total+=subs['time']
+
+            self.timer_var.set(f"{str(total//3600).zfill(2)}:{str((total//60)%60).zfill(2)}:{str(total%60).zfill(2)}")
+            time.sleep(1)
 
 if __name__ == "__main__":
     root = tk.Tk()
