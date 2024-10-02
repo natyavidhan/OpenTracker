@@ -40,11 +40,11 @@ class App:
         self.timer_canvas = tk.Canvas(self.tabs_frame, bg=Colors.secondary, borderwidth=0, highlightthickness=0)
         self.timer_canvas.bind("<Button-1>", self.on_timer_canvas_click)
 
-        vbar=tk.Scrollbar(self.timer_canvas, orient=VERTICAL)
-        vbar.pack(side=RIGHT,fill=Y)
-        vbar.config(command=self.timer_canvas.yview)
+        self.vbar=tk.Scrollbar(self.timer_canvas, orient=VERTICAL)
+        self.vbar.pack(side=RIGHT,fill=Y)
+        self.vbar.config(command=self.timer_canvas.yview)
 
-        self.timer_canvas.config(yscrollcommand=vbar.set)
+        self.timer_canvas.config(yscrollcommand=self.vbar.set)
         self.timer_canvas.place(x=0, y=0, width=450, height=500)
 
         total = 0
@@ -53,10 +53,13 @@ class App:
             self.timer_canvas.create_rectangle(25, 20+(120*idx), 425, 120+(120*idx), fill=Colors.primary, width=0)
             self.timer_canvas.config(scrollregion=(0, 0, 450, 140+(120*idx)))
 
-            self.timer_canvas.create_image((40, 35+(120*idx)), anchor="nw", image=self.start_img if subs['paused'] else self.pause_img, tags=f"{subs['name']}Btn")
+            btn = self.timer_canvas.create_image((40, 35+(120*idx)), anchor="nw", image=self.start_img if subs['paused'] else self.pause_img)
             self.timer_canvas.create_text((110, 35+(120*idx)), anchor="nw", font=Fonts._16, text=subs['name'], fill=Colors.text)
             ftime = f"{str(subs['time']//3600).zfill(2)}:{str((subs['time']//60)%60).zfill(2)}:{str(subs['time']%60).zfill(2)}"
-            self.timer_canvas.create_text((110, 55+(120*idx)), anchor="nw", font=Fonts._30, text=ftime, fill=Colors.text, tags=f"{subs['name']}Time")
+            time_text = self.timer_canvas.create_text((110, 55+(120*idx)), anchor="nw", font=Fonts._30, text=ftime, fill=Colors.text)
+
+            self.settings['subjects'][idx]['ids'] = [btn, time_text]
+
             total+=subs['time']
 
         self.timer_var.set(f"{str(total//3600).zfill(2)}:{str((total//60)%60).zfill(2)}:{str(total%60).zfill(2)}")
@@ -64,9 +67,13 @@ class App:
         Thread(target=self.update).start()
 
     def on_timer_canvas_click(self, event):
-        item = self.timer_canvas.find_closest(event.x, event.y)
-        item = self.timer_canvas.itemcget(item, "tags").replace("current", "").strip()
-        print(item)
+        offset = self.vbar.get()[0]*500
+        item = self.timer_canvas.find_closest(event.x, int(event.y+offset))[0]
+        
+        for s in self.settings['subjects']:
+            if s['ids'][0] == item:
+                s['paused'] = not s['paused']
+                self.timer_canvas.itemconfig(item, image=self.start_img if s['paused'] else self.pause_img)
 
     def update(self):
         while True:
@@ -82,7 +89,7 @@ class App:
 
             for subs in self.settings['subjects']:
                 ftime = f"{str(subs['time']//3600).zfill(2)}:{str((subs['time']//60)%60).zfill(2)}:{str(subs['time']%60).zfill(2)}"
-                self.timer_canvas.itemconfig(f"{subs['name']}Time", text=ftime)
+                self.timer_canvas.itemconfig(subs['ids'][1], text=ftime)
                 total+=subs['time']
 
             self.timer_var.set(f"{str(total//3600).zfill(2)}:{str((total//60)%60).zfill(2)}:{str(total%60).zfill(2)}")
